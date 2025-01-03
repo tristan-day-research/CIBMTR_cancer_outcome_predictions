@@ -3,7 +3,21 @@ import torch
 from google.colab import auth
 from google.colab import userdata
 
-def configure_environment(environment='colab'):
+def mount_google_drive():
+    # Mount Google Drive
+    drive.mount('/content/drive')
+    
+    # Set up path to your data directory in Drive
+    DATA_DIR = '/content/drive/MyDrive/your_project_folder/CIBMTR_data'
+    
+    # Create directory if it doesn't exist
+    if not os.path.exists(DATA_DIR):
+        os.makedirs(DATA_DIR)
+        
+    return DATA_DIR
+
+
+def configure_environment(environment='colab', GOOGLE_DRIVE_DIR):
     if environment == 'colab':
         # Retrieve GitHub and GCP credentials
         token = userdata.get('GITHUB_PAT')
@@ -26,7 +40,10 @@ def configure_environment(environment='colab'):
     else:
         print("Running in local environment. Ensure .env is configured.")
 
-    return gcp_bucket_name, gcp_file_prefix, project_id
+
+    DATA_DIR = mount_google_drive(GOOGLE_DRIVE_DIR)
+
+    return gcp_bucket_name, gcp_file_prefix, project_id, DATA_DIR
 
 
    
