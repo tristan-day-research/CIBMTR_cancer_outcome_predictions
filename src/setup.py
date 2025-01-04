@@ -1,14 +1,16 @@
 import os
-import torch
+import subprocess
+from google.colab import drive
 from google.colab import auth
 from google.colab import userdata
 
-def mount_google_drive():
+
+def mount_google_drive(google_drive_dir):
     # Mount Google Drive
     drive.mount('/content/drive')
     
     # Set up path to your data directory in Drive
-    DATA_DIR = '/content/drive/MyDrive/your_project_folder/CIBMTR_data'
+    DATA_DIR = f'/content/drive/MyDrive/google_drive_dir'
     
     # Create directory if it doesn't exist
     if not os.path.exists(DATA_DIR):
@@ -17,7 +19,18 @@ def mount_google_drive():
     return DATA_DIR
 
 
-def configure_environment(environment='colab', GOOGLE_DRIVE_DIR):
+def check_gpu():
+    try:
+        subprocess.run(['nvidia-smi'], check=True)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
+    else:
+        print("Running in local environment. Ensure .env is configured.")
+
+
+def configure_environment(environment, google_drive_dir):
     if environment == 'colab':
         # Retrieve GitHub and GCP credentials
         token = userdata.get('GITHUB_PAT')
@@ -37,13 +50,11 @@ def configure_environment(environment='colab', GOOGLE_DRIVE_DIR):
         print(f"GCP Project Set")
         print("Git configured with your user data.")
 
-    else:
-        print("Running in local environment. Ensure .env is configured.")
+        DATA_DIR = mount_google_drive(google_drive_dir)
 
+        # Check GPU availability
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(f"Using device: {device}")
+        check_gpu()
 
-    DATA_DIR = mount_google_drive(GOOGLE_DRIVE_DIR)
-
-    return gcp_bucket_name, gcp_file_prefix, project_id, DATA_DIR
-
-
-   
+    return gcp_bucket_name, gcp_file_prefix, project_id, DATA_DIR, device
