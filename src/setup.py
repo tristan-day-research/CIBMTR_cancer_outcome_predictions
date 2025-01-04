@@ -20,6 +20,16 @@ def mount_google_drive(google_drive_dir):
     return DATA_DIR
 
 
+def install_requirements():
+    try:
+        subprocess.check_call(['pip', 'install', '-r', 'requirements.txt'])
+        print("Successfully installed requirements")
+    except subprocess.CalledProcessError as e:
+        print(f"Error installing requirements: {e}")
+    except FileNotFoundError:
+        print("requirements.txt file not found")
+
+
 def check_gpu():
     try:
         subprocess.run(['nvidia-smi'], check=True)
@@ -35,23 +45,29 @@ def configure_environment(environment, google_drive_dir):
     if environment == 'colab':
         # Retrieve GitHub and GCP credentials
         token = userdata.get('GITHUB_PAT')
-        github_email = userdata.get('GITHUB_EMAIL')
-        github_username = userdata.get('GITHUB_USER_NAME')
-        project_id = userdata.get('GCP_EEG_PROJECT_ID')
-        gcp_bucket_name = userdata.get('GCP_EEG_BUCKET_NAME')
-        gcp_file_prefix = userdata.get('EEG_GCP_FILEPATH')
+  
+        # For using data on Google Cloud Platform
+        # gcp_project_id = userdata.get('GCP_PROJECT_ID')
+        # gcp_bucket_name = userdata.get('GCP_BUCKET_NAME')
+        # gcp_file_prefix = userdata.get('GCP_FILEPATH')
+        # os.system(f'gcloud config set project {gcp_project_id}')
+        # print(f"GCP Project Set")
 
         # Configure Git with credentials
+        github_email = userdata.get('GITHUB_EMAIL')
+        github_username = userdata.get('GITHUB_USER_NAME')
         os.system(f'git config --global user.email "{github_email}"')
         os.system(f'git config --global user.name "{github_username}"')
-        os.system(f'gcloud config set project {project_id}')
+        
 
         auth.authenticate_user()
         
-        print(f"GCP Project Set")
-        print("Git configured with your user data.")
+        
+        
 
         DATA_DIR = mount_google_drive(google_drive_dir)
+
+        install_requirements()
 
         # Check GPU availability
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
