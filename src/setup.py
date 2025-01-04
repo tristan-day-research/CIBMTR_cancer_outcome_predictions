@@ -11,7 +11,7 @@ def mount_google_drive(google_drive_dir):
     drive.mount('/content/drive')
     
     # Set up path to your data directory in Drive
-    DATA_DIR = f'/content/drive/MyDrive/google_drive_dir'
+    DATA_DIR = f'/content/drive/MyDrive/{google_drive_dir}'
     
     # Create directory if it doesn't exist
     if not os.path.exists(DATA_DIR):
