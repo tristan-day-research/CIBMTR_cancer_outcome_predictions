@@ -52,6 +52,42 @@ class EnvironmentConfig:
         return all([self.gcp_bucket_name, self.gcp_file_prefix, self.project_id])
 
 
+def setup_notebook(notebook_name: str, colab_notebooks_dir: str = "colab_notebooks") -> Path:
+    """Set up notebook for editing in Colab while maintaining Git structure.
+    
+    Args:
+        notebook_name: Name of the notebook file (e.g., 'analysis.ipynb')
+        colab_notebooks_dir: Directory name in Drive for Colab notebooks
+        
+    Returns:
+        Path: Path to the notebook in Drive
+    """
+    try:
+        # Define paths
+        repo_path = Path('/content') / os.environ.get('REPOSITORY', '')
+        source_path = repo_path / 'notebooks' / notebook_name
+        drive_dir = Path('/content/drive/MyDrive') / colab_notebooks_dir
+        drive_path = drive_dir / notebook_name
+        
+        # Create drive directory if needed
+        drive_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Copy notebook to Drive if it exists
+        if source_path.exists():
+            import shutil
+            shutil.copy2(source_path, drive_path)
+            # Create symbolic link back to repository
+            os.system(f'ln -sf "{drive_path}" "{source_path}"')
+            logger.info(f"Notebook setup at: {drive_path}")
+            logger.info("You can now open this notebook from Drive in File -> Open notebook")
+            return drive_path
+        else:
+            raise FileNotFoundError(f"Notebook {notebook_name} not found in notebooks directory")
+    except Exception as e:
+        logger.error(f"Failed to setup notebook: {e}")
+        raise
+        
+
 def mount_google_drive(google_drive_dir: str) -> Path:
     """Mount Google Drive and set up data directory.
     
