@@ -5,7 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from IPython.display import display, HTML
 
-def initial_data_overview(df, output_dir='eda/results'):
+def initial_data_overview(df, output_dir='results/EDA'):
     """
     Performs initial data overview and saves results as CSVs
     
@@ -44,7 +44,7 @@ def initial_data_overview(df, output_dir='eda/results'):
     missing_summary.to_csv(f'{output_dir}/missing_values.csv', index=False)
     
     # Basic statistics for numeric columns
-    numeric_summary = df.describe(include=[np.number])
+    numeric_summary = df.describe(include=[np.number]).transpose()  # Added .transpose()
     numeric_summary.to_csv(f'{output_dir}/numeric_summary.csv')
     
     # Cardinality of categorical columns
@@ -55,6 +55,42 @@ def initial_data_overview(df, output_dir='eda/results'):
     })
     cardinality.to_csv(f'{output_dir}/categorical_cardinality.csv', index=False)
 
+
+def analyze_categorical_distributions(df, output_dir='results/EDA'):
+   """
+   Analyzes distributions of categorical variables and saves results to CSV.
+   
+   Args:
+       df: DataFrame to analyze
+       output_dir: Directory to save results
+   """
+   # Create output directory if it doesn't exist
+   os.makedirs(output_dir, exist_ok=True)
+   
+   # Get categorical columns
+   categorical_columns = df.select_dtypes(include=['object']).columns
+   
+   # Initialize lists to store results
+   results = []
+   
+   # Analyze each categorical column
+   for col in categorical_columns:
+       # Get value distributions
+       value_counts = df[col].value_counts(normalize=True).mul(100).round(1)
+       missing_count = df[col].isnull().sum()
+       
+       # Store results for each value in the column
+       for value, percentage in value_counts.items():
+           results.append({
+               'column': col,
+               'value': value,
+               'percentage': percentage,
+               'missing_count': missing_count,
+               'total_unique_values': len(value_counts)
+           })
+   
+   # Convert to DataFrame and save
+   pd.DataFrame(results).to_csv(f'{output_dir}/categorical_distributions.csv', index=False)
 
 def comprehensive_eda(df):
     # Distribution Analysis
